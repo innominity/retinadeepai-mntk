@@ -1,0 +1,71 @@
+services:
+  db:
+    image: postgres:14.3
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    env_file:
+      - .prod.env
+    ports:
+      - "5433:5432"
+    networks:
+      - main
+
+  web:
+    # Берем Dockerfile из каталога app
+    build: ./backend
+    # Запускаем тестовый сервер
+    command: /home/app/web/dev.sh
+    # куда будут помещены данные из каталога app
+    volumes:
+      - ./backend/:/home/app/web/
+      - ./backend/static:/home/app/web/static
+      - ./backend/media:/home/app/web/media
+    # Открываем порт 8000 внутри и снаружи
+    expose:
+      - 8000
+      - 5555
+    # Файл содержащий переменные для контейнера
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+      - redis
+    env_file:
+      - .prod.env
+    networks:
+      - main
+    restart: always
+
+  redis:
+    image: redis:5-alpine
+    container_name: redis
+    env_file:
+      - .prod.env
+    networks:
+      - main
+    restart: always
+
+  frontend:
+    container_name: frontend
+    build:
+      context: ./frontend
+    volumes:
+      - ./frontend:/app
+      - "/app/node_modules"
+    ports:
+      - "8080:8080"
+    command: npm run dev
+    depends_on:
+      - web
+    networks:
+      - main
+
+volumes:
+  static_volume:
+  media_volume:
+  pg_data:
+    driver: local
+
+networks:
+  main:
+    driver: bridge

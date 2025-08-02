@@ -1,0 +1,11 @@
+### Django ###
+*.log
+*.pot
+*.pyc
+__pycache__/
+
+media
+db.sqlite3
+
+retinadeepai/vision/**/*.pt
+retinadeepai/vision/**/*.model
